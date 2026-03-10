@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Beautifier — Tree Viewer</title>
+    <meta name="description"
+        content="Paste JSON and explore it as an interactive tree. Search, click to reveal paths, and beautify with ease.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+    <header id="app-header">
+        <div class="header-content">
+            <h1 class="header-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="logo-icon">
+                    <polyline points="16 18 22 12 16 6" />
+                    <polyline points="8 6 2 12 8 18" />
+                </svg>
+                JSON Beautifier
+            </h1>
+
+            <!-- Theme Toggle -->
+            <button id="btn-theme-toggle" class="btn-icon theme-toggle-btn" title="Toggle Light/Dark Theme">
+                <!-- Moon icon (shows in light mode) -->
+                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+                </svg>
+                <!-- Sun icon (shows in dark mode) -->
+                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                    style="display: none;">
+                    <circle cx="12" cy="12" r="5"></circle>
+                    <line x1="12" y1="1" x2="12" y2="3"></line>
+                    <line x1="12" y1="21" x2="12" y2="23"></line>
+                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                    <line x1="1" y1="12" x2="3" y2="12"></line>
+                    <line x1="21" y1="12" x2="23" y2="12"></line>
+                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+                </svg>
+            </button>
+        </div>
+        <div class="header-subtitle">Paste · Explore · Discover</div>
+    </header>
+
+    <main id="app-main">
+        <!-- LEFT PANEL: Input -->
+        <section id="input-panel" class="panel">
+            <div class="panel-header">
+                <h2>Input JSON</h2>
+                <div class="panel-actions">
+                    <button id="btn-format" class="btn btn-ghost" title="Format JSON (Ctrl+Enter)">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="16 18 22 12 16 6" />
+                            <polyline points="8 6 2 12 8 18" />
+                        </svg>
+                        Format
+                    </button>
+
+                    <button id="btn-clear" class="btn btn-ghost" title="Clear input">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                        Clear
+                    </button>
+                </div>
+            </div>
+            <textarea id="json-input"
+                placeholder='Paste your JSON here...\n\n{\n  "name": "example",\n  "items": [1, 2, 3]\n}'
+                spellcheck="false"></textarea>
+        </section>
+
+        <!-- RESIZER -->
+        <div id="resizer" class="resizer" title="Drag to resize">
+            <div class="resizer-handle"></div>
+        </div>
+
+        <!-- RIGHT PANEL: Tree Viewer -->
+        <section id="tree-panel" class="panel">
+            <div class="panel-header">
+                <h2>Tree Viewer</h2>
+                <div class="tree-toolbar">
+                    <button id="btn-expand-all" class="btn btn-ghost btn-sm" title="Expand all nodes">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="7 13 12 18 17 13" />
+                            <polyline points="7 6 12 11 17 6" />
+                        </svg>
+                        Expand All
+                    </button>
+                    <button id="btn-collapse-all" class="btn btn-ghost btn-sm" title="Collapse all nodes">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polyline points="17 11 12 6 7 11" />
+                            <polyline points="17 18 12 13 7 18" />
+                        </svg>
+                        Collapse All
+                    </button>
+                </div>
+                <div class="search-wrapper">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                    </svg>
+                    <input type="text" id="search-input" placeholder="Search keys or values..." autocomplete="off">
+                    <span id="search-count" class="search-count"></span>
+                    <button id="btn-clear-search" class="btn-icon" title="Clear search" style="display:none;">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <line x1="18" y1="6" x2="6" y2="18" />
+                            <line x1="6" y1="6" x2="18" y2="18" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Path Display Bar (Now above tree) -->
+            <div id="path-bar" style="display:none;">
+                <div class="path-content">
+                    <span class="path-label">Path</span>
+                    <code id="path-display"></code>
+                    <button id="btn-copy-path" class="btn-icon btn-sm-icon" title="Copy path">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                            <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+                        </svg>
+                    </button>
+                    <span id="copy-toast" class="copy-toast">Copied!</span>
+                </div>
+            </div>
+
+            <div id="tree-container">
+                <div id="tree-placeholder">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                        <line x1="12" y1="22.08" x2="12" y2="12" />
+                    </svg>
+                    <p>Paste JSON on the left and click <strong>Beautify &amp; View</strong></p>
+                </div>
+                <div id="tree-content" style="display:none;"></div>
+            </div>
+
+
+        </section>
+    </main>
+
+    <script src="app.js"></script>
+</body>
+
+</html>
