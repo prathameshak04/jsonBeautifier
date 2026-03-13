@@ -297,6 +297,9 @@
             const valueSpan = document.createElement('span');
             valueSpan.className = 'tree-value ' + type;
             valueSpan.textContent = formatValue(value, type);
+            valueSpan.dataset.rawValue = (value === null) ? '' : String(value);
+            valueSpan.dataset.valueType = type;
+            valueSpan.title = 'Double-click to edit';
             row.appendChild(valueSpan);
             node.appendChild(row);
         }
@@ -304,7 +307,17 @@
         // Click handler for path display
         row.addEventListener('click', (e) => {
             if (e.target.closest('.tree-toggle')) return;
+            if (e.target.closest('.inline-edit-wrapper')) return;
             selectRow(row);
+        });
+
+        // Double-click handler for inline editing
+        row.addEventListener('dblclick', (e) => {
+            if (e.target.closest('.tree-toggle')) return;
+            if (e.target.closest('.inline-edit-wrapper')) return;
+            const valueSpan = row.querySelector('.tree-value');
+            if (!valueSpan) return; // Not a leaf node
+            startInlineEdit(row, valueSpan);
         });
 
         return node;
@@ -320,6 +333,212 @@
         const dp = row.dataset.displayPath;
         pathDisplay.textContent = dp;
         pathBar.style.display = 'flex';
+    }
+
+    // ──────────────────── INLINE EDIT ────────────────────
+    let activeInlineEdit = null;
+
+    function startInlineEdit(row, valueSpan) {
+        // If there's already an active edit, cancel it first
+        if (activeInlineEdit) {
+            cancelInlineEdit(activeInlineEdit);
+        }
+
+        const rawValue = valueSpan.dataset.rawValue;
+        const valueType = valueSpan.dataset.valueType;
+
+        // Hide the value span
+        valueSpan.style.display = 'none';
+
+        // Create the edit wrapper
+        const wrapper = document.createElement('div');
+        wrapper.className = 'inline-edit-wrapper';
+
+        // Create input
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'inline-edit-input';
+        input.value = rawValue;
+        if (valueType === 'string') {
+            input.value = rawValue; // raw string without quotes
+        }
+        wrapper.appendChild(input);
+
+        // Copy button
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'inline-edit-btn copy';
+        copyBtn.title = 'Copy value';
+        copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+        copyBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            navigator.clipboard.writeText(input.value).then(() => {
+                copyBtn.classList.add('copied');
+                copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+                setTimeout(() => {
+                    copyBtn.classList.remove('copied');
+                    copyBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>';
+                }, 1200);
+            });
+        });
+        wrapper.appendChild(copyBtn);
+
+        // Save button
+        const saveBtn = document.createElement('button');
+        saveBtn.className = 'inline-edit-btn save';
+        saveBtn.title = 'Save (Enter)';
+        saveBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>';
+        saveBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            saveInlineEdit(editState);
+        });
+        wrapper.appendChild(saveBtn);
+
+        // Cancel button
+        const cancelBtn = document.createElement('button');
+        cancelBtn.className = 'inline-edit-btn cancel';
+        cancelBtn.title = 'Cancel (Esc)';
+        cancelBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>';
+        cancelBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            cancelInlineEdit(editState);
+        });
+        wrapper.appendChild(cancelBtn);
+
+        // Insert wrapper next to valueSpan
+        valueSpan.parentNode.insertBefore(wrapper, valueSpan.nextSibling);
+
+        const editState = {
+            row,
+            valueSpan,
+            wrapper,
+            input,
+            originalValue: rawValue,
+            originalType: valueType
+        };
+
+        activeInlineEdit = editState;
+
+        // Focus and select the input
+        requestAnimationFrame(() => {
+            input.focus();
+            input.select();
+        });
+
+        // Key handlers
+        input.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                e.stopPropagation();
+                saveInlineEdit(editState);
+            } else if (e.key === 'Escape') {
+                e.preventDefault();
+                e.stopPropagation();
+                cancelInlineEdit(editState);
+            }
+        });
+
+        // Stop propagation on wrapper clicks
+        wrapper.addEventListener('click', (e) => e.stopPropagation());
+        wrapper.addEventListener('dblclick', (e) => e.stopPropagation());
+        wrapper.addEventListener('mousedown', (e) => e.stopPropagation());
+
+        // Auto-save when input loses focus (clicking elsewhere)
+        input.addEventListener('blur', () => {
+            // Small delay to allow button clicks to fire first
+            setTimeout(() => {
+                if (activeInlineEdit === editState && document.body.contains(wrapper)) {
+                    saveInlineEdit(editState);
+                }
+            }, 150);
+        });
+    }
+
+    // Auto-save when clicking anywhere outside the inline editor
+    // Using CAPTURE phase (true) so it fires before any stopPropagation can block it
+    document.addEventListener('mousedown', (e) => {
+        if (!activeInlineEdit) return;
+        // Check if click is inside the wrapper
+        const wrapper = activeInlineEdit.wrapper;
+        if (wrapper && wrapper.contains(e.target)) return;
+        saveInlineEdit(activeInlineEdit);
+    }, true);
+
+    function cancelInlineEdit(editState) {
+        if (!editState) return;
+        editState.wrapper.remove();
+        editState.valueSpan.style.display = '';
+        if (activeInlineEdit === editState) {
+            activeInlineEdit = null;
+        }
+    }
+
+    function saveInlineEdit(editState) {
+        if (!editState) return;
+        // Guard against double-save
+        if (!document.body.contains(editState.wrapper)) return;
+        const newRawValue = editState.input.value;
+        const path = editState.row.dataset.path;
+
+        // Parse the new value
+        const newValue = parseInputValue(newRawValue, editState.originalType);
+
+        // Update the parsedData
+        setValueAtPath(parsedData, path, newValue);
+
+        // Update the textarea
+        jsonInput.value = JSON.stringify(parsedData, null, 2);
+
+        // Update the value span
+        const newType = getType(newValue);
+        editState.valueSpan.className = 'tree-value ' + newType;
+        editState.valueSpan.textContent = formatValue(newValue, newType);
+        editState.valueSpan.dataset.rawValue = (newValue === null) ? '' : String(newValue);
+        editState.valueSpan.dataset.valueType = newType;
+
+        // Flash animation to confirm save
+        editState.valueSpan.classList.add('value-saved');
+        setTimeout(() => editState.valueSpan.classList.remove('value-saved'), 600);
+
+        // Clean up
+        editState.wrapper.remove();
+        editState.valueSpan.style.display = '';
+        if (activeInlineEdit === editState) {
+            activeInlineEdit = null;
+        }
+
+        // Show toast
+        copyToast.textContent = 'Saved!';
+        copyToast.classList.add('show');
+        setTimeout(() => {
+            copyToast.classList.remove('show');
+            copyToast.textContent = 'Copied!';
+        }, 1200);
+    }
+
+    function setValueAtPath(data, path, value) {
+        // Parse path like "$document.key1.key2[0].key3"
+        const parts = path.replace(/^\$document\.?/, '').match(/[^.\[\]]+/g);
+        if (!parts || parts.length === 0) return;
+
+        let current = data;
+        for (let i = 0; i < parts.length - 1; i++) {
+            const part = isNaN(parts[i]) ? parts[i] : parseInt(parts[i], 10);
+            current = current[part];
+        }
+        const lastPart = isNaN(parts[parts.length - 1]) ? parts[parts.length - 1] : parseInt(parts[parts.length - 1], 10);
+        current[lastPart] = value;
+    }
+
+    function parseInputValue(str, originalType) {
+        // Try to maintain type intelligence
+        if (str === '' || str === 'null') return null;
+        if (str === 'true') return true;
+        if (str === 'false') return false;
+        if (!isNaN(str) && str.trim() !== '') {
+            const num = Number(str);
+            if (isFinite(num)) return num;
+        }
+        return str; // Default to string
     }
 
     function getType(val) {
