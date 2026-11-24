@@ -13,61 +13,60 @@
     <meta name="description"
         content="Paste JSON and explore it as an interactive tree. Search, click to reveal paths, and beautify with ease.">
     <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&family=Spline+Sans+Mono:wght@400;500;600&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
     <header id="app-header">
-        <div class="header-content">
-            <h1 class="header-title">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="logo-icon">
-                    <polyline points="16 18 22 12 16 6" />
-                    <polyline points="8 6 2 12 8 18" />
-                </svg>
-                JSON Beautifier
-            </h1>
+        <h1 class="header-title">
+            <!-- Rack glyph: two uprights and two beams -->
+            <svg viewBox="0 0 32 32" fill="none" class="logo-icon" aria-hidden="true">
+                <rect x="5" y="3" width="3" height="26" rx="1" fill="currentColor" />
+                <rect x="24" y="3" width="3" height="26" rx="1" fill="currentColor" />
+                <rect class="beam beam-1" x="8" y="9" width="16" height="3" rx="1" />
+                <rect class="beam beam-2" x="8" y="19" width="16" height="3" rx="1" />
+            </svg>
+            <span class="wordmark">JSON Beautifier</span>
+        </h1>
 
-            <!-- Theme Toggle -->
-            <button id="btn-theme-toggle" class="btn-icon theme-toggle-btn" title="Toggle Light/Dark Theme">
-                <!-- Moon icon (shows in light mode) -->
-                <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-                </svg>
-                <!-- Sun icon (shows in dark mode) -->
-                <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-                    style="display: none;">
-                    <circle cx="12" cy="12" r="5"></circle>
-                    <line x1="12" y1="1" x2="12" y2="3"></line>
-                    <line x1="12" y1="21" x2="12" y2="23"></line>
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-                    <line x1="1" y1="12" x2="3" y2="12"></line>
-                    <line x1="21" y1="12" x2="23" y2="12"></line>
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-                </svg>
-            </button>
-        </div>
-        <div class="header-subtitle">Paste · Explore · Discover</div>
+        <button id="btn-theme-toggle" class="btn-icon theme-toggle-btn" title="Switch light or dark theme"
+            aria-label="Switch light or dark theme">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                style="display: none;">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+        </button>
     </header>
 
     <main id="app-main">
         <!-- LEFT PANEL: Input -->
         <section id="input-panel" class="panel">
             <div class="panel-header">
-                <h2>Input JSON</h2>
+                <h2>Input</h2>
                 <div class="panel-actions">
-                    <button id="btn-format" class="btn btn-ghost" title="Format JSON (Ctrl+Enter)">
+                    <button id="btn-format" class="btn btn-primary" title="Format JSON (Ctrl+Enter)">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                            <polyline points="16 18 22 12 16 6" />
-                            <polyline points="8 6 2 12 8 18" />
+                            <line x1="4" y1="6" x2="20" y2="6" />
+                            <line x1="8" y1="12" x2="20" y2="12" />
+                            <line x1="12" y1="18" x2="20" y2="18" />
                         </svg>
                         Format
                     </button>
-
                     <button id="btn-clear" class="btn btn-ghost" title="Clear input">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <line x1="18" y1="6" x2="6" y2="18" />
@@ -77,9 +76,15 @@
                     </button>
                 </div>
             </div>
-            <textarea id="json-input"
-                placeholder='Paste your JSON here...\n\n{\n  "name": "example",\n  "items": [1, 2, 3]\n}'
+            <textarea id="json-input" aria-label="JSON input"
+                placeholder="Paste your JSON here.&#10;&#10;{&#10;  &quot;name&quot;: &quot;example&quot;,&#10;  &quot;items&quot;: [1, 2, 3]&#10;}"
                 spellcheck="false"></textarea>
+            <div id="json-error" class="json-error" role="alert" style="display:none;"></div>
+            <div id="input-status" class="status" data-state="empty">
+                <span class="status-dot"></span>
+                <span id="status-text" class="status-text">Waiting for JSON</span>
+                <span id="status-meta" class="status-meta"></span>
+            </div>
         </section>
 
         <!-- RESIZER -->
@@ -90,21 +95,21 @@
         <!-- RIGHT PANEL: Tree Viewer -->
         <section id="tree-panel" class="panel">
             <div class="panel-header">
-                <h2>Tree Viewer</h2>
+                <h2>Tree</h2>
                 <div class="tree-toolbar">
                     <button id="btn-expand-all" class="btn btn-ghost btn-sm" title="Expand all nodes">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="7 13 12 18 17 13" />
                             <polyline points="7 6 12 11 17 6" />
                         </svg>
-                        Expand All
+                        Expand all
                     </button>
                     <button id="btn-collapse-all" class="btn btn-ghost btn-sm" title="Collapse all nodes">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                             <polyline points="17 11 12 6 7 11" />
                             <polyline points="17 18 12 13 7 18" />
                         </svg>
-                        Collapse All
+                        Collapse all
                     </button>
                 </div>
                 <div class="search-wrapper">
@@ -112,7 +117,8 @@
                         <circle cx="11" cy="11" r="8" />
                         <line x1="21" y1="21" x2="16.65" y2="16.65" />
                     </svg>
-                    <input type="text" id="search-input" placeholder="Search keys or values..." autocomplete="off">
+                    <input type="text" id="search-input" placeholder="Search keys or values" autocomplete="off"
+                        aria-label="Search keys or values" title="Enter jumps to the next match, Shift+Enter to the previous">
                     <span id="search-count" class="search-count"></span>
                     <button id="btn-clear-search" class="btn-icon" title="Clear search" style="display:none;">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -123,7 +129,7 @@
                 </div>
             </div>
 
-            <!-- Path Display Bar (Now above tree) -->
+            <!-- Path bar: clickable breadcrumbs for the selected row -->
             <div id="path-bar" style="display:none;">
                 <div class="path-content">
                     <span class="path-label">Path</span>
@@ -138,20 +144,18 @@
                 </div>
             </div>
 
-            <div id="tree-container">
+            <div id="tree-container" tabindex="0" aria-label="JSON tree. Use arrow keys to move, Enter to edit.">
                 <div id="tree-placeholder">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
-                        <path
-                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
-                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
-                        <line x1="12" y1="22.08" x2="12" y2="12" />
+                    <svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                        <line x1="12" y1="6" x2="12" y2="58" />
+                        <line x1="52" y1="6" x2="52" y2="58" />
+                        <line class="ph-beam" x1="12" y1="20" x2="52" y2="20" />
+                        <line class="ph-beam" x1="12" y1="38" x2="52" y2="38" />
                     </svg>
-                    <p>Paste JSON on the left</p>
+                    <p>Paste JSON on the left. The tree builds as you type.</p>
                 </div>
                 <div id="tree-content" style="display:none;"></div>
             </div>
-
-
         </section>
     </main>
 
